@@ -21,8 +21,10 @@ def product_view(request, pk):
     product = get_object_or_404(Product, id=pk)
     reviews = Review.objects.all().filter(product=product)
 
+    if request.session['reviewed_products'] is None:
+        request.session['reviewed_products'] = []
+
     if request.method == 'POST':
-        # логика для добавления отзыва
         form = ReviewForm(request.POST)
 
         if form.is_valid():
@@ -30,19 +32,21 @@ def product_view(request, pk):
             review.product = product
             review.save()
 
-        request.session['reviewed_products'] = []
         request.session['reviewed_products'].append(pk)
         request.session.modified = True
 
         ire = True  # is_review_exist
 
     elif request.method == 'GET':
-        if pk in request.session['reviewed_products']:
+        if pk in request.session['reviewed_products'] and reviews:
             ire = True
             form = None
         else:
             ire = False
             form = ReviewForm()
+
+    for item in reviews:
+        print(item)
 
     context = {
         'form': form,
